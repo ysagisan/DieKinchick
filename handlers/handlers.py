@@ -27,7 +27,9 @@ async def preStartMenu(message: Message):
 
 @dp.message(F.text == "Начать подбор фильма")
 async def likeDislikeMenu(message: Message):
-    await message.answer("подожди друзей", reply_markup=kb.likeDislikeMenu)
+    data = func()
+    await message.answer(data)
+    # await message.answer("подожди друзей", reply_markup=kb.likeDislikeMenu)
 
 @dp.message(F.text == "❤️")
 async def likeDislikeMenu(message: Message):

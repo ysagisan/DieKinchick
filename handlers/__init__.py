@@ -4,11 +4,6 @@ from handlers import handlers as hd
 from aiogram import F
 
 
-# def register_handlers(dp):
-#     dp.message.register(hd.start, CommandStart())
-#     dp.message.register(hd.roomMenu, F.text == "Поехали! 🚜")
-
-
 import importlib
 from pathlib import Path
 from aiogram import Dispatcher
