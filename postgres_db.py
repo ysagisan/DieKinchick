@@ -18,25 +18,25 @@ def read_sql_from_file(filename):
 create_table_query = read_sql_from_file("queries.sql")
 cur.execute(create_table_query)
 
-def film_exists(name):
+def film_exists(kinopoiskId):
     check_table = """
-    SELECT 1 FROM films_information WHERE name = %s;
+    SELECT 1 FROM films_information WHERE kinopoiskId = %s;
     """
-    cur.execute(check_table, (name,))
+    cur.execute(check_table, (kinopoiskId,))
     return cur.fetchone() is not None
 
-def insert_film(name, year, genre, rating, description):
+def insert_film(kinopoiskId, name, year, genre, rating, description):
 
-    if film_exists(name):
-        print(f"Фильм {name} уже существует в бд")
+    if film_exists(kinopoiskId):
+        print(f"Фильм {kinopoiskId: name} уже существует в бд")
         return
 
     insert_query = """
-    INSERT INTO films_information (name, year, genre, rating, description)
-    VALUES (%s, %s, %s, %s, %s);
+    INSERT INTO films_information (kinopoiskId, name, year, genre, rating, description)
+    VALUES (%s, %s, %s, %s, %s, %s);
     """
     try:
-        cur.execute(insert_query, (name, year, genre, rating, description))
+        cur.execute(insert_query, (kinopoiskId, name, year, genre, rating, description))
         conn.commit()
     except Exception as e:
         print(f"Ошибка при вставке фмильма: {e}")
@@ -47,18 +47,19 @@ def parse_and_add_films(page_num):
         films_data = get_info(page)
 
         for film in films_data["items"]:
-            name = film.get("nameRu") or film.get("nameEn")
+            kinopoiskId = film.get("kinopoiskId")
+            name = film.get("nameRu") or film.get("nameEn") or film.get("nameOriginal")
             year = film.get("year")
-            rating = film.get("ratingKinopoisk")
+            rating = film.get("ratingKinopoisk") or film.get("ratingImdb")
             description = film.get("description")
 
             genres = film.get("genres")
             genre = ', '.join([g["genre"] for g in genres]) if genres else None
 
-            insert_film(name, year, genre, rating, description)
+            insert_film(kinopoiskId, name, year, genre, rating, description)
 
 
-parse_and_add_films(page_num=5)
+parse_and_add_films(page_num=4)
 
 cur.close()
 conn.close()

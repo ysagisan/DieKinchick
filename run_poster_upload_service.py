@@ -11,7 +11,7 @@ for page in range(1, 4):
     if not films:
         continue
     for film in films["items"]:
-        name = film.get("nameRu") or film.get("nameEn") or f"film_{film['kinopoiskId']}"
+        id = film.get("kinopoiskId")
         poster_url = film.get("posterUrl")
         if poster_url:
-            upload_poster_from_url(poster_url, name)
+            upload_poster_from_url(poster_url, str(id))
