@@ -9,14 +9,14 @@ conn = psycopg2.connect(
     dbname="films",
     user="admin_film_db",
     password="diekinchic2025",
-    host="localhost",
-    port=5440
+    host="postgres",
+    port=5432
 )
 cur = conn.cursor()
 
 # Настройка MinIO клиента
 minio_client = Minio(
-    "localhost:9000",
+    "minio:9000",
     access_key="ysagisan",
     secret_key="diekinchic2025",
     secure=False
@@ -49,7 +49,7 @@ def get_film_poster(kinopoisk_id):
         minio_client.stat_object("films-posters", object_name)
         # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса в внешний мир так сказатб,
         # каждый раз после запуска нужно запускать cloudflared tunnel --url http://localhost:9000 и менять ссылку
-        return f"https://reporters-watch-gold-tags.trycloudflare.com/films-posters/{object_name}"
+        return f"https://guinea-potatoes-fell-restaurants.trycloudflare.com/films-posters/{object_name}"
     except Exception as e:
         print(f"Ошибка при получении постера: {e}")
         return None

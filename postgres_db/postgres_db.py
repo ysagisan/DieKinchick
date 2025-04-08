@@ -1,5 +1,6 @@
+import os
 import psycopg2
-from kinopoisk_api import get_info
+from kinopoisk_api.kinopoisk_api import get_info
 
 conn = psycopg2.connect(
     dbname="films",
@@ -12,7 +13,9 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 def read_sql_from_file(filename):
-    with open(filename, 'r') as file:
+    base_path = os.path.dirname(__file__)  # путь к папке, где лежит postgres_db.py
+    file_path = os.path.join(base_path, filename)
+    with open(file_path, 'r') as file:
         return file.read()
 
 create_table_query = read_sql_from_file("queries.sql")
@@ -26,9 +29,8 @@ def film_exists(kinopoiskId):
     return cur.fetchone() is not None
 
 def insert_film(kinopoiskId, name, year, genre, rating, description):
-
     if film_exists(kinopoiskId):
-        print(f"Фильм {kinopoiskId: name} уже существует в бд")
+        print(f"Фильм {kinopoiskId}: {name} уже существует в бд")
         return
 
     insert_query = """
@@ -59,7 +61,7 @@ def parse_and_add_films(page_num):
             insert_film(kinopoiskId, name, year, genre, rating, description)
 
 
-parse_and_add_films(page_num=4)
+parse_and_add_films(page_num=10)
 
 cur.close()
 conn.close()

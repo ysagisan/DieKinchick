@@ -28,6 +28,22 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  api-gateway:
+    build: .
+    container_name: film_api
+    ports:
+      - "3298:3298"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: films
+    depends_on:
+      - postgres
+      - minio
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   minio_data:
