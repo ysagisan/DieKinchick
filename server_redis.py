@@ -3,10 +3,7 @@ import redis
 import json
 
 app_dk = Flask(__name__)
-app_dk.config.update(
-    JSON_AS_ASCII=False,
-    JSONIFY_PRETTYPRINT_REGULAR=True  # Красивое форматирование
-)
+
 r = redis.Redis(host='localhost', port=6379, db=0)
 rooms_n_users = {} 
 
