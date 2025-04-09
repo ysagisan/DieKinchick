@@ -1,8 +1,7 @@
-from aiogram import F, Dispatcher
-from aiogram.filters import CommandStart
+from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from createBot import dp
+from botSettings.createBot import dp
 from aiogram.fsm.state import StatesGroup, State
 
 import keyboards.keyboards as kb

@@ -1,13 +1,11 @@
-from aiogram import F, Dispatcher
+from aiogram import F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from createBot import dp
-from aiogram.fsm.state import StatesGroup, State
+from botSettings.createBot import dp
 
 import keyboards.keyboards as kb
 
-from api_gateway.film_service import get_film_data, get_kinopoisk_id_by_title # файлы в ветке find_film_service
 
 # class FilmSearchState(StatesGroup):   # для понимания контекста бота, типа он ждет сообщения с названием фильма
 #     waiting_for_title = State()

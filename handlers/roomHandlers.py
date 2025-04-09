@@ -1,10 +1,8 @@
 from aiogram import  F
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import keyboards.keyboards as kb
-from createBot import dp
+from botSettings.createBot import dp
 
 
 class RoomStates(StatesGroup):
