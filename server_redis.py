@@ -59,7 +59,6 @@ def proceed_data():
             output = {"status": "Match found", "matched film": data['film']}
             json_str = json.dumps(output, ensure_ascii=False, indent=2)
             return Response(json_str, mimetype='application/json')
-            # return jsonify({"status": "Match found", "matched film": data['film']}), 200
         
         return jsonify({"status": "Data proceeded, matches not found"}), 200
     
