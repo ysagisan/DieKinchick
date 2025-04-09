@@ -21,15 +21,15 @@ async def start(message: Message):
 async def roomMenu(message: Message):
     await message.answer("выбери свой путь........", reply_markup=kb.roomMenu)
 
-@dp.message(F.text == "Создать комнату")
-async def preStartMenu(message: Message):
-    #создание комнаты
-    await message.answer("подожди друзей", reply_markup=kb.preStartMenu)
-
-@dp.message(F.text == "Подключиться к комнате")
-async def preStartMenu(message: Message):
-    #тут логика подключения
-    await message.answer("Скажи пароль)))", reply_markup=kb.cancelMenu)
+# @dp.message(F.text == "Создать комнату")
+# async def preStartMenu(message: Message):
+#     #создание комнаты
+#     await message.answer("подожди друзей", reply_markup=kb.preStartMenu)
+#
+# @dp.message(F.text == "Подключиться к комнате")
+# async def preStartMenu(message: Message):
+#     #тут логика подключения
+#     await message.answer("Скажи пароль)))", reply_markup=kb.cancelMenu)
 
 @dp.message(F.text == "Начать подбор фильма")
 async def likeDislikeMenu(message: Message):
