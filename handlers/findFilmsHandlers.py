@@ -1,4 +1,4 @@
-from aiogram import F
+from aiogram import F, Dispatcher
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from botSettings.createBot import dp
@@ -7,6 +7,8 @@ from aiogram.fsm.state import StatesGroup, State
 import keyboards.keyboards as kb
 
 from api_gateway.film_service import get_film_data, get_kinopoisk_id_by_title # файлы в ветке find_film_service
+
+from handlers.mainHandlers import cancel
 
 class FilmSearchState(StatesGroup):   # для понимания контекста бота, типа он ждет сообщения с названием фильма
     waiting_for_title = State()
@@ -41,3 +43,14 @@ async def film_info(message: Message, state: FSMContext):
             await message.answer("Фильм не найден.")
     else:
         await message.answer("Фильм не найден в базе.")
+
+
+@dp.message(F.text == "Начать подбор фильма")
+async def likeDislikeMenu(message: Message):
+    await message.answer("подожди друзей", reply_markup=kb.likeDislikeMenu)
+
+def register_handlers(dp: Dispatcher):
+    dp.message.register(likeDislikeMenu, F.text == "Начать подбор фильма")
+    dp.message.register(cancel, F.text == "Отмена")
+    dp.message.register(ask_for_title, F.text == "Найти фильм")
+    dp.message.register(film_info, FilmSearchState.waiting_for_title)
