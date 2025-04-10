@@ -1,6 +1,6 @@
-from handlers import handlers
+from handlers import mainHandlers
 from aiogram.filters import CommandStart
-from handlers import handlers as hd
+from handlers import mainHandlers as hd
 from aiogram import F
 
 
