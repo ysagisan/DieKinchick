@@ -1,4 +1,4 @@
-from aiogram import F
+from aiogram import F, Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -19,6 +19,18 @@ async def start(message: Message):
 async def roomMenu(message: Message):
     await message.answer("выбери свой путь........", reply_markup=kb.roomMenu)
 
+
+@dp.message(F.text == "Отмена")
+async def likeDislikeMenu(message: Message, state: FSMContext):
+    await message.answer("привет бродяга 😎", reply_markup=kb.startMenu)
+    await state.clear()  # добавил для восттановления контекста бота, чтобы не из любого меню можно было запустить film_info
+
+
+def register_handlers(dp: Dispatcher):
+    dp.message.register(start, CommandStart())
+    dp.message.register(roomMenu, F.text == "Поехали! 🚜")
+    dp.message.register(likeDislikeMenu, F.text == "Отмена")
+
 # @dp.message(F.text == "Создать комнату")
 # async def preStartMenu(message: Message):
 #     #создание комнаты
@@ -29,22 +41,18 @@ async def roomMenu(message: Message):
 #     #тут логика подключения
 #     await message.answer("Скажи пароль)))", reply_markup=kb.cancelMenu)
 
-@dp.message(F.text == "Начать подбор фильма")
-async def likeDislikeMenu(message: Message):
-    await message.answer("подожди друзей", reply_markup=kb.likeDislikeMenu)
+# @dp.message(F.text == "Начать подбор фильма")
+# async def likeDislikeMenu(message: Message):
+#     await message.answer("подожди друзей", reply_markup=kb.likeDislikeMenu)
 
-@dp.message(F.text == "❤️")
-async def likeDislikeMenu(message: Message):
-    pass
+# @dp.message(F.text == "❤️")
+# async def likeDislikeMenu(message: Message):
+#     pass
+#
+# @dp.message(F.text == "👎")
+# async def likeDislikeMenu(message: Message):
+#     pass
 
-@dp.message(F.text == "👎")
-async def likeDislikeMenu(message: Message):
-    pass
-
-@dp.message(F.text == "Отмена")
-async def likeDislikeMenu(message: Message, state: FSMContext):
-    await message.answer("привет бродяга 😎", reply_markup=kb.startMenu)
-    await state.clear()    # добавил для восттановления контекста бота, чтобы не из любого меню можно было запустить film_info
 
 # @dp.message(F.text == "Найти фильм")       # для поиска фильма
 # async def ask_for_title(message: Message, state: FSMContext):
