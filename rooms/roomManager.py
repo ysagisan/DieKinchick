@@ -6,7 +6,7 @@ class RoomManager:
     def __init__(self):
         self.idsRange = list(range(100000, 1000001))
         self.nonAvalibleIds = set()
-        self.activeRooms: Dict[int, Room] = {}
+        self.activeRooms = dict()
 
     def createUniqueId(self):
         newId = choice(self.idsRange)
@@ -21,3 +21,5 @@ class RoomManager:
         self.activeRooms[roomId] = room
         return room
 
+    def deleteRoom(self):
+        pass
