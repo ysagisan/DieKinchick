@@ -1,6 +1,8 @@
 from flask import Flask, jsonify
 from minio import Minio
 import psycopg2
+import random
+from flask import request
 
 app = Flask(__name__)
 
@@ -49,10 +51,38 @@ def get_film_poster(kinopoisk_id):
         minio_client.stat_object("films-posters", object_name)
         # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса в внешний мир так сказатб,
         # каждый раз после запуска нужно запускать cloudflared tunnel --url http://localhost:9000 и менять ссылку
-        return f"https://guinea-potatoes-fell-restaurants.trycloudflare.com/films-posters/{object_name}"
+        return f"https://sculpture-dear-surgeons-priest.trycloudflare.com/films-posters/{object_name}"
     except Exception as e:
         print(f"Ошибка при получении постера: {e}")
         return None
+
+def get_random_films(limit):
+    cur.execute("SELECT kinopoiskId, name, year, genre, rating, description FROM films_information")
+    all_films = cur.fetchall()
+
+    # выбираем случайные фильмы
+    random.shuffle(all_films)
+    selected = all_films[:limit]
+
+    films = []
+    for row in selected:
+        kinopoisk_id = row[0]
+        film_info = get_film_info(kinopoisk_id)
+
+        if film_info:
+            poster_url = get_film_poster(kinopoisk_id)  # получаем постер фильма
+            film = {
+                "kinopoiskId": kinopoisk_id,
+                "name": film_info["name"],
+                "year": film_info["year"],
+                "genre": film_info["genre"],
+                "rating": film_info["rating"],
+                "description": film_info["description"],
+                "poster_url": poster_url
+            }
+            films.append(film)
+
+    return films
 
 @app.route('/film/<int:kinopoisk_id>', methods=['GET']) # тут обрабатываем запрос на поиск фильма по id
 def get_film_data(kinopoisk_id):
@@ -62,7 +92,6 @@ def get_film_data(kinopoisk_id):
         return jsonify({"error": "Film not found"}), 404
 
     # Получаем постер фильма из MinIO
-
     poster_url = get_film_poster(kinopoisk_id)
 
     # Собираем всю информацию и отправляем её
@@ -70,8 +99,6 @@ def get_film_data(kinopoisk_id):
     if poster_url:
         response['poster_url'] = poster_url
     return jsonify(response)
-
-from flask import request
 
 @app.route('/search', methods=['GET']) # тут запрос на поиск фильма по названию
 def search_film_by_title():
@@ -101,6 +128,10 @@ def search_film_by_title():
     except Exception as e:
         return jsonify({"error": f"Server error: {e}"}), 500
 
+@app.get("/films/recommendations")
+def get_recommendations(limit: int = 10):
+    films = get_random_films(limit)
+    return {"films": films}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3298)
