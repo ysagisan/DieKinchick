@@ -10,3 +10,8 @@ class Room:
     def addMember(self, member):
         self.roomMembers.append(member)
 
+    def deleteMember(self, user):
+        self.roomMembers.remove(user)
+
+    def getCreatorId(self):
+        return self.creatorId

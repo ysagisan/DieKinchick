@@ -12,8 +12,10 @@ startMenu = ReplyKeyboardMarkup(
 roomMenu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Создать комнату"),
-         KeyboardButton(text="Подключиться к комнате"), # добавил кнопочки
-         KeyboardButton(text="Найти фильм")]
+         KeyboardButton(text="Подключиться к комнате"),  # добавил кнопочки
+         ],
+        [KeyboardButton(text="Найти фильм"),
+         KeyboardButton(text="Отмена")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -34,7 +36,7 @@ likeDislikeMenu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="❤️"),
          KeyboardButton(text="👎"),
-         KeyboardButton(text="Отмена")]
+         KeyboardButton(text="Уйти")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -50,7 +52,7 @@ cancelMenu = ReplyKeyboardMarkup(
     input_field_placeholder="Ну что погнали нафиг"
 )
 
-searchMenu = ReplyKeyboardMarkup(    # добавил меню с поиском
+searchMenu = ReplyKeyboardMarkup(  # добавил меню с поиском
     keyboard=[
         [KeyboardButton(text="Отмена")]
     ],
