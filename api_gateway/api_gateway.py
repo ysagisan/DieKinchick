@@ -27,7 +27,7 @@ minio_client = Minio(
 # Функция для получения информации о фильме из БД
 def get_film_info(kinopoisk_id):
     querie = """
-        SELECT name, year, genre, rating, description FROM films_information
+        SELECT name, year, genre, rating, webUrl, description FROM films_information
         WHERE kinopoiskId = %s;
     """
     cur.execute(querie, (kinopoisk_id,))
@@ -38,7 +38,8 @@ def get_film_info(kinopoisk_id):
             "year": result[1],
             "genre": result[2],
             "rating": result[3],
-            "description": result[4]
+            "webUrl": result[4],
+            "description": result[5]
         }
     return None
 
@@ -51,38 +52,48 @@ def get_film_poster(kinopoisk_id):
         minio_client.stat_object("films-posters", object_name)
         # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса в внешний мир так сказатб,
         # каждый раз после запуска нужно запускать cloudflared tunnel --url http://localhost:9000 и менять ссылку
-        return f"https://sculpture-dear-surgeons-priest.trycloudflare.com/films-posters/{object_name}"
+        return f"https://classical-herbal-toilet-buddy.trycloudflare.com/films-posters/{object_name}"
     except Exception as e:
         print(f"Ошибка при получении постера: {e}")
         return None
 
-def get_random_films(limit):
-    cur.execute("SELECT kinopoiskId, name, year, genre, rating, description FROM films_information")
-    all_films = cur.fetchall()
-
-    # выбираем случайные фильмы
-    random.shuffle(all_films)
-    selected = all_films[:limit]
-
+def build_film_list(kinopoisk_ids):
     films = []
-    for row in selected:
-        kinopoisk_id = row[0]
+    for kinopoisk_id in kinopoisk_ids:
         film_info = get_film_info(kinopoisk_id)
-
         if film_info:
-            poster_url = get_film_poster(kinopoisk_id)  # получаем постер фильма
+            poster_url = get_film_poster(kinopoisk_id)
             film = {
                 "kinopoiskId": kinopoisk_id,
                 "name": film_info["name"],
                 "year": film_info["year"],
                 "genre": film_info["genre"],
                 "rating": film_info["rating"],
+                "webUrl": film_info["webUrl"],
                 "description": film_info["description"],
                 "poster_url": poster_url
             }
             films.append(film)
-
     return films
+
+def get_random_films(limit):
+    cur.execute("SELECT kinopoiskId FROM films_information")
+    film_ids = [row[0] for row in cur.fetchall()]
+    random.shuffle(film_ids)
+    selected = film_ids[:limit]
+
+    return build_film_list(selected)
+
+def get_films_by_genre(limit, genre):
+    query = """
+        SELECT kinopoiskId FROM films_information
+        WHERE genre ILIKE %s
+    """
+    cur.execute(query, (f"%{genre}%",))
+    film_ids = [row[0] for row in cur.fetchall()]
+    random.shuffle(film_ids)
+    selected = film_ids[:limit]
+    return build_film_list(selected)
 
 @app.route('/film/<int:kinopoisk_id>', methods=['GET']) # тут обрабатываем запрос на поиск фильма по id
 def get_film_data(kinopoisk_id):
@@ -129,8 +140,14 @@ def search_film_by_title():
         return jsonify({"error": f"Server error: {e}"}), 500
 
 @app.get("/films/recommendations")
-def get_recommendations(limit: int = 10):
-    films = get_random_films(limit)
+def get_recommendations():
+    limit = int(request.args.get("limit", 10))
+    genre = request.args.get("genre")
+
+    if genre:
+        films = get_films_by_genre(limit, genre)
+    else:
+        films = get_random_films(limit)
     return {"films": films}
 
 if __name__ == "__main__":

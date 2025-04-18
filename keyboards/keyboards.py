@@ -22,19 +22,19 @@ roomMenu = ReplyKeyboardMarkup(
 
 preStartMenu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Начать подбор фильма"),
-         KeyboardButton(text="Отмена")]
+        [KeyboardButton(text="Начать без выбора жанра"), KeyboardButton(text="Выбрать жанр")],
+        [KeyboardButton(text="Отмена")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
-    input_field_placeholder="Ну что погнали нафиг"
+    input_field_placeholder="Хочешь выбрать жанр фильмов?"
 )
 
 likeDislikeMenu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="❤️"),
          KeyboardButton(text="👎"),
-         KeyboardButton(text="Отмена")]
+         KeyboardButton(text="Уйти")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -57,4 +57,15 @@ searchMenu = ReplyKeyboardMarkup(    # добавил меню с поиском
     resize_keyboard=True,
     one_time_keyboard=False,
     input_field_placeholder="Ну что погнали нафиг"
+)
+
+genreMenu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Комедия"), KeyboardButton(text="Боевик"), KeyboardButton(text="Ужасы")],
+        [KeyboardButton(text="Фантастика"), KeyboardButton(text="Мелодрама"), KeyboardButton(text="Драма")],
+        [KeyboardButton(text="Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=False,
+    input_field_placeholder="Выбери жанр"
 )

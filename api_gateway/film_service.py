@@ -34,3 +34,16 @@ def get_recommended_films(limit=10):
     except Exception as e:
         print(f"Ошибка при получении рекомендованных фильмов: {e}")
         return []
+
+def get_recommended_film_with_genre(limit=10, genre=None):
+    try:
+        params = {"limit": limit}
+        if genre:
+            params["genre"] = genre
+        response = requests.get(RECOMMEND_URL, params=params)
+        if response.status_code == 200:
+            return response.json().get("films", [])
+        return []
+    except Exception as e:
+        print(f"Ошибка при получении рекомендованных фильмов: {e}")
+        return []

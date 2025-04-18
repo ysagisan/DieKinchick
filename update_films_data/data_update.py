@@ -3,6 +3,6 @@ from datetime import datetime
 
 if __name__ == "__main__":
     print(f"[{datetime.now()}] Запуск задачи обновления фильмов")
-    parse_and_add_films(page_num=11)
+    parse_and_add_films(page_num=20)
     print("Обновление завершено!")
 
