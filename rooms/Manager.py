@@ -1,3 +1,5 @@
+from requests import delete
+
 from rooms.User import User
 from rooms.Room import Room
 from random import choice
@@ -29,6 +31,11 @@ class Manager:
         if removedUser:
             self.userList.remove(removedUser)
 
+    def deleteUserFromRoom(self, user, room):
+        room.roomMembers.remove(user)
+        if len(room.roomMembers) == 0:
+            self.deleteRoom(room)
+
     def getLastUser(self):
         return self.userList[-1]
 
@@ -49,7 +56,6 @@ class Manager:
         for room in self.activeRooms:
             print(room.roomId)
             if room.roomId == roomId:
-                print(f"from getRoomById {room} !!!!!!!!!!!!!!!!!!!!")
                 return room
         return None
 
@@ -70,20 +76,10 @@ class Manager:
     def checkRoomIsNotEmpty(self, room: Room):
         return len(room.roomMembers)
 
-    def leaveRoom(self, userId):
-        leaveUser = self.getUserById(userId)
-        if leaveUser:
-            print(f"user {leaveUser} leaved to room")
-            roomId = leaveUser.getRoomNumber()
-            room = self.getRoomById(roomId)
-            room.deleteMember(leaveUser)
-            leaveUser.leaveRoom()
-            if not self.checkRoomIsNotEmpty(room):
-                self.deleteRoom(roomId)
-
-    def checkRoomId(self, roomId):
-        if roomId in self.activeRooms:
-            return 1
+    def checkRoomId(self, room_Id):
+        for room in self.activeRooms:
+            if room.roomId == room_Id:
+                return 1
         return -1
 
     def getCreatorId(self, roomId):

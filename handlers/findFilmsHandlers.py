@@ -1,13 +1,14 @@
 from aiogram import F, Dispatcher
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.storage.base import StorageKey
 from aiogram.types import Message
 
 from api_gateway.film_service import get_recommended_film_with_genre, get_kinopoisk_id_by_title, get_film_data
 from api_gateway.film_service import get_recommended_films
-from botSettings.createBot import dp
+from botSettings.createBot import dp, bot
 from aiogram.fsm.state import StatesGroup, State
 import keyboards.keyboards as kb
-from handlers.mainHandlers import cancelForSearch
+from handlers.mainHandlers import cancelForSearch, cancel
 from rooms.createManager import manager
 
 class FilmSearchState(StatesGroup):   # для понимания контекста бота, типа он ждет сообщения с названием фильма
@@ -19,7 +20,7 @@ class FilmRecommendationState(StatesGroup): # для состояния, ког�
 class FilmGenreChoiceState(StatesGroup): # для состояния выбора жанра
     choosing_genre = State()
 
-@dp.message(F.text == "Найти фильм")       # для поиска фильма
+@dp.message(F.text == "🔍 Найти фильм")       # для поиска фильма
 async def ask_for_title(message: Message, state: FSMContext):
     await message.answer("Введи название фильма", reply_markup=kb.searchMenu)
     await state.set_state(FilmSearchState.waiting_for_title)
@@ -42,10 +43,14 @@ async def film_info(message: Message, state: FSMContext):
             poster_url = film_data.get("poster_url")
 
             # Формируем сообщение с постером и информацией о фильме
+            text = f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}\nОписание: {description}\n\nПодробнее: {webUrl}"
             if poster_url:
-                await message.answer_photo(poster_url, caption=f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}\nОписание: {description}\n\nПодробнее: {webUrl}",
-                    reply_markup=kb.searchMenu
-                )
+                if len(text) > 1024:
+                    await message.answer_photo(poster_url,
+                                               f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}")
+                    await message.answer(f"Описание: {description}\n\nПодробнее: {webUrl}", reply_markup=kb.searchMenu)
+                else:
+                    await message.answer_photo(poster_url, caption=text, reply_markup=kb.searchMenu)
             else:
                 await message.answer(f"Постер для фильма {name} не найден.\n\nОписание:\n{description}\n\nПодробнее: {webUrl}")
         else:
@@ -53,61 +58,71 @@ async def film_info(message: Message, state: FSMContext):
     else:
         await message.answer("Фильм не найден в базе.")
 
-async def send_film(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    films = user_data.get("films", [])
-    index = user_data.get("index", 0)
+async def send_room_film(message: Message, state: FSMContext, room, userId):  # здесь отправляем фильм в конкретный чат конкретному пользователю
 
-    # Проверяем, есть ли фильмы для отправки
-    if index < len(films):
-        film = films[index]
-        name = film["name"]
-        year = film["year"]
-        genre = film["genre"]
-        rating = film["rating"]
-        webUrl = film["webUrl"]
-        description = film["description"]
-        poster_url = film["poster_url"]
+    film = room.getCurrentFilmForUser(userId)
 
-        # Отправляем постер и информацию о фильме
-        if poster_url:
-            await message.answer_photo(
-                poster_url,
-                caption=f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}\nОписание: {description}\n\nПодробнее: {webUrl}",
-                reply_markup=kb.likeDislikeMenu
-            )
-        else:
-            await message.answer(
-                f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}\nОписание: {description}\n\nПодробнее: {webUrl}",
-                reply_markup=kb.likeDislikeMenu
-            )
-
-        await state.update_data(index=index + 1)
-    else:
+    if not film:
         await message.answer("Вы просмотрели все фильмы!")
+        return
 
-@dp.message(F.text == "Начать без выбора жанра")
+    poster_url = film["poster_url"]
+    name = film["name"]
+    year = film["year"]
+    genre = film["genre"]
+    rating = film["rating"]
+    webUrl = film["webUrl"]
+    description = film["description"]
+
+    text = f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}\nОписание: {description}\n\nПодробнее: {webUrl}"
+
+    if poster_url:
+        if len(text) > 1024:
+            await bot.send_photo(userId, poster_url, f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}")
+            await bot.send_message(userId, f"Описание: {description}\n\nПодробнее: {webUrl}", reply_markup=kb.likeDislikeMenu)
+        else:
+            await bot.send_photo(userId, poster_url, caption=text, reply_markup=kb.likeDislikeMenu)
+    else:
+        await bot.send_message(userId, text, reply_markup=kb.likeDislikeMenu)
+
+    room.nextFilmForUser(userId)
+
+
+@dp.message(F.text == "🎲 Случайный подбор")   # здесь задается список фильмов и для каждого пользователя устанавливается контекст рекомендации
 async def start_recommendation(message: Message, state: FSMContext):
-    films = get_recommended_films(limit=10)
+    user = manager.getUserById(message.from_user.id)
+    room = manager.getRoomById(user.getRoomNumber())
 
-    if not films:
-        await message.answer("Не удалось загрузить фильмы.")
-        return
+    if not room.films:
+        room.setFilms(get_recommended_films(limit=10))
 
-    await state.update_data(films=films, index=0)
-    await state.set_state(FilmRecommendationState.recommendation)
-    await send_film(message, state)
+    for curUser in room.roomMembers:
+        userId = curUser.getUserId()
 
-@dp.message(FilmRecommendationState.recommendation)
+        # создаем отдельный контекст для каждого участника
+        individual_state = FSMContext(
+            storage=state.storage,
+            key=StorageKey(
+                bot_id=bot.id,
+                chat_id=userId,
+                user_id=userId
+            )
+        )
+        await individual_state.set_state(FilmRecommendationState.recommendation)
+        await send_room_film(message, individual_state, room, userId)
+
+
+
+@dp.message(FilmRecommendationState.recommendation)  # здесь пользователи оценивают фильм и отправляется следующий
 async def rate_film(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    films = user_data.get("films", [])
-    index = user_data.get("index", 0)
+    user = manager.getUserById(message.from_user.id)
+    room = manager.getRoomById(user.getRoomNumber())
 
-    if index <= 0:
+    lastIndex = room.userIndex.get(user.userId, 1) - 1
+    if lastIndex < 0 or lastIndex >= len(room.films):
         return
 
-    film = films[index - 1]  # Получаем фильм который был показан
+    film = room.films[lastIndex]
     film_name = film["name"]
 
     if message.text == "❤️":
@@ -117,9 +132,10 @@ async def rate_film(message: Message, state: FSMContext):
     else:
         return
 
-    await send_film(message, state)
+    await send_room_film(message, state, room, message.from_user.id)
 
-@dp.message(F.text == "Выбрать жанр")
+
+@dp.message(F.text == "🎭 Выбрать жанр")
 async def choose_genre(message: Message, state: FSMContext):
     await message.answer("Выбери жанр фильма:", reply_markup=kb.genreMenu)
     await state.set_state(FilmGenreChoiceState.choosing_genre)
@@ -131,26 +147,50 @@ async def start_recommendation_with_genre(message: Message, state: FSMContext):
 
     films = get_recommended_film_with_genre(limit=10, genre=genre)
 
-    if not films:
-        await message.answer("Не удалось загрузить фильмы.")
-        return
+    user = manager.getUserById(message.from_user.id)
+    room = manager.getRoomById(user.getRoomNumber())
 
-    await state.update_data(films=films, index=0)
-    await state.set_state(FilmRecommendationState.recommendation)
-    await send_film(message, state)
+    if not room.films:
+        room.setFilms(films)
 
-@dp.message(F.text == "Уйти")
+    for curUser in room.roomMembers:
+        userId = curUser.getUserId()
+
+        # создаем отдельный контекст для каждого участника
+        individual_state = FSMContext(
+            storage=state.storage,
+            key=StorageKey(
+                bot_id=bot.id,
+                chat_id=userId,
+                user_id=userId
+            )
+        )
+        await individual_state.set_state(FilmRecommendationState.recommendation)
+        await send_room_film(message, individual_state, room, userId)
+
+@dp.message(F.text == "🚪 Уйти")
 async def leave(message: Message, state: FSMContext):
+    curUser = manager.getUserById(message.from_user.id)
+    room = manager.getRoomById(curUser.getRoomNumber())
+    username = message.from_user.username
+
     manager.deleteUser(message.from_user.id)
-    await message.answer(f"пользователь {message.from_user.username} вышел из комнаты!", reply_markup=kb.startMenu)
+    manager.deleteUserFromRoom(curUser, room)
+
+    for user in room.roomMembers:
+        userId = user.getUserId()
+        await bot.send_message(userId, f"Пользователь @{username} вышел из комнаты!")
+
+    await message.answer(f"Вы покинули комнату {room.getRoomId()}", reply_markup=kb.startMenu)
     await state.clear()
 
 def register_handlers(dp: Dispatcher):
-    dp.message.register(choose_genre, F.text == "Выбрать жанр")
-    dp.message.register(leave, F.text == "Уйти")
-    dp.message.register(cancelForSearch, F.text == "Отмена")
+    dp.message.register(choose_genre, F.text == "🎭 Выбрать жанр")
+    dp.message.register(leave, F.text == "🚪 Уйти")
+    dp.message.register(cancel, F.text == "🔄 Отмена")
+    dp.message.register(cancelForSearch, F.text == "🚫 Закрыть поиск")
     dp.message.register(start_recommendation_with_genre, FilmGenreChoiceState.choosing_genre)
-    dp.message.register(start_recommendation, F.text == "Начать без выбора жанра")
-    dp.message.register(ask_for_title, F.text == "Найти фильм")
+    dp.message.register(start_recommendation, F.text == "🎲 Случайный подбор")
+    dp.message.register(ask_for_title, F.text == "🔍 Найти фильм")
     dp.message.register(film_info, FilmSearchState.waiting_for_title)
     dp.message.register(rate_film, FilmRecommendationState.recommendation)

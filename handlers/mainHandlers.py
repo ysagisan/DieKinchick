@@ -20,19 +20,29 @@ async def roomMenu(message: Message):
     await message.answer("выбери свой путь........", reply_markup=kb.roomMenu)
 
 
-@dp.message(F.text == "Отмена")
+@dp.message(F.text == "🔄 Отмена")
 async def cancel(message: Message, state: FSMContext):
+    curUser = manager.getUserById(message.from_user.id)
+    room = manager.getRoomById(curUser.getRoomNumber())
+
     manager.deleteUser(message.from_user.id)
+    manager.deleteUserFromRoom(curUser, room)
+
     await message.answer("привет бродяга 😎", reply_markup=kb.startMenu)
     await state.clear()  # добавил для восттановления контекста бота, чтобы не из любого меню можно было запустить film_info
 
-@dp.message(F.text == "Отмена")
+@dp.message(F.text == "🚫 Закрыть поиск")
 async def cancelForSearch(message: Message, state: FSMContext):
     await message.answer("привет бродяга 😎", reply_markup=kb.startMenu)
     await state.clear()  # добавил для восттановления контекста бота, чтобы не из любого меню можно было запустить film_info
 
+@dp.message(F.text == "❌ Отмена")
+async def cancelFromEnterPassword(message: Message, state: FSMContext):
+    await message.answer("привет бродяга 😎", reply_markup=kb.startMenu)
+    await state.clear()
+
 def register_handlers(dp: Dispatcher):
     dp.message.register(start, CommandStart())
     dp.message.register(roomMenu, F.text == "Поехали! 🚜")
-    dp.message.register(cancel, F.text == "Отмена")
+    dp.message.register(cancel, F.text == "🔄 Отмена")
 

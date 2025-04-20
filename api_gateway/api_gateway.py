@@ -50,9 +50,9 @@ def get_film_poster(kinopoisk_id):
         object_name = f"{kinopoisk_id}"
         # Проверим, существует ли объект в MinIO
         minio_client.stat_object("films-posters", object_name)
-        # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса в внешний мир так сказатб,
+        # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса во внешний мир так сказатб,
         # каждый раз после запуска нужно запускать cloudflared tunnel --url http://localhost:9000 и менять ссылку
-        return f"https://classical-herbal-toilet-buddy.trycloudflare.com/films-posters/{object_name}"
+        return f"https://foster-patrick-porcelain-vertical.trycloudflare.com/films-posters/{object_name}"
     except Exception as e:
         print(f"Ошибка при получении постера: {e}")
         return None
