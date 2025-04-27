@@ -1,8 +1,8 @@
 import requests
 
-API_URL = "http://localhost:3298/film"  # адрес для запроса /films/<kinopoiskId>
-SEARCH_URL = "http://localhost:3298/search" # адрес для запроса /search?title=<Название фильма>
-RECOMMEND_URL = "http://localhost:3298/films/recommendations"
+API_URL = "http://film_api:3298/film"  # адрес для запроса /films/<kinopoiskId>
+SEARCH_URL = "http://film_api:3298/search" # адрес для запроса /search?title=<Название фильма>
+RECOMMEND_URL = "http://film_api:3298/films/recommendations"
 
 def get_film_data(kinopoisk_id):
     try:

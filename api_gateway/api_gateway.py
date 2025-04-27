@@ -52,7 +52,7 @@ def get_film_poster(kinopoisk_id):
         minio_client.stat_object("films-posters", object_name)
         # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса во внешний мир так сказатб,
         # каждый раз после запуска нужно запускать cloudflared tunnel --url http://localhost:9000 и менять ссылку
-        return f"https://foster-patrick-porcelain-vertical.trycloudflare.com/films-posters/{object_name}"
+        return f"https://laughing-camp-wife-trailers.trycloudflare.com/films-posters/{object_name}"
     except Exception as e:
         print(f"Ошибка при получении постера: {e}")
         return None
