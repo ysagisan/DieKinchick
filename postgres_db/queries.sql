@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS films_information (
     year INT,
     genre TEXT,
     rating REAL,
+    webUrl TEXT,
     description TEXT
 );

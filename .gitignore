@@ -1,0 +1,5 @@
+/dump.rdb
+/server_test.py.idea/
+.idea/
+minio_data/
+minio_posters/

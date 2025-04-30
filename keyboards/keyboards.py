@@ -11,9 +11,9 @@ startMenu = ReplyKeyboardMarkup(
 
 roomMenu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Создать комнату"),
-         KeyboardButton(text="Подключиться к комнате"), # добавил кнопочки
-         KeyboardButton(text="Найти фильм")]
+        [KeyboardButton(text="🆕 Создать комнату"),
+         KeyboardButton(text="👥 Присоединиться")], # добавил кнопочки
+         [KeyboardButton(text="🔍 Найти фильм")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -22,19 +22,19 @@ roomMenu = ReplyKeyboardMarkup(
 
 preStartMenu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Начать подбор фильма"),
-         KeyboardButton(text="Отмена")]
+        [KeyboardButton(text="🎲 Случайный подбор"), KeyboardButton(text="🎭 Выбрать жанр")],
+        [KeyboardButton(text="🔄 Отмена")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
-    input_field_placeholder="Ну что погнали нафиг"
+    input_field_placeholder="Хочешь выбрать жанр фильмов?"
 )
 
 likeDislikeMenu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="❤️"),
-         KeyboardButton(text="👎"),
-         KeyboardButton(text="Отмена")]
+         KeyboardButton(text="👎")],
+         [KeyboardButton(text="🚪 Уйти")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -43,7 +43,7 @@ likeDislikeMenu = ReplyKeyboardMarkup(
 
 cancelMenu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Отмена")]
+        [KeyboardButton(text="🔄 Отмена")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -52,7 +52,36 @@ cancelMenu = ReplyKeyboardMarkup(
 
 searchMenu = ReplyKeyboardMarkup(    # добавил меню с поиском
     keyboard=[
-        [KeyboardButton(text="Отмена")]
+        [KeyboardButton(text="🚫 Закрыть поиск")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=False,
+    input_field_placeholder="Ну что погнали нафиг"
+)
+
+genreMenu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Комедия"), KeyboardButton(text="Боевик"), KeyboardButton(text="Ужасы")],
+        [KeyboardButton(text="Фантастика"), KeyboardButton(text="Мелодрама"), KeyboardButton(text="Драма")],
+        [KeyboardButton(text="🔄 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=False,
+    input_field_placeholder="Выбери жанр"
+)
+
+menuForConnectedUsers = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="🚪 Уйти")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=False,
+    input_field_placeholder="Ну что погнали нафиг"
+)
+
+enterPasswordMenu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="❌ Отмена")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,

@@ -44,6 +44,18 @@ services:
       - minio
     restart: unless-stopped
 
+  tg_bot:
+    build:
+      context: .
+      dockerfile: botSettings/Dockerfile
+    container_name: telegram_bot
+    environment:
+      API_GATEWAY_URL: http://api-gateway:3298
+      TELEGRAM_TOKEN: ${TOKEN}
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   minio_data:
