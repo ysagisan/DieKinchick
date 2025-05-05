@@ -4,13 +4,14 @@ import json
 
 app_dk = Flask(__name__)
 
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host='redis', port=6379, db=0)
 rooms_n_users = {}
 
 
 def add_new_room(data):
-    rooms_n_users[data['room']] = data['users']
-    print(f"New room {data['room']} with users {data['users']} added")
+    users = request.args.getlist('users')
+    rooms_n_users[data['room']] = users
+    print(f"New room {data['room']} with users {rooms_n_users[data['room']]} added")
 
 
 def push_to_reddis(data):
@@ -22,13 +23,16 @@ def push_to_reddis(data):
 
 
 def look_for_matches(data):
-    for user in rooms_n_users[data['room']]:
+    users =  rooms_n_users[data['room']]
+    print(f"USERS in room:{data['room']}:", users, flush=True)
+    for user in users:
         liked_films = []
-        if user is not data['user']:
+        if user != data['user']:
             room = data['room']
             list_name = f'like_{room}_{user}'
             liked_films = r.lrange(list_name, 0, -1)
             liked_films = [film.decode('utf-8') for film in liked_films]
+            print(f"LIKED_FILMS for {user}:", liked_films, flush=True)
             if data['film'] not in liked_films:
                 return False
     print("We found a match!")
@@ -48,7 +52,7 @@ def delete_data(data):
 @app_dk.route('/push', methods=['POST'])
 def proceed_data():
     try:
-        data = request.json
+        data = request.args
 
         if not data:
             return jsonify({"error": "No data provided"}), 400

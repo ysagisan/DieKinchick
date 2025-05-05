@@ -1,7 +1,8 @@
-from aiogram import F, Dispatcher
+from aiogram import F, Dispatcher, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
-from aiogram.types import Message
+from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+import requests
 
 from api_gateway.film_service import get_recommended_film_with_genre, get_kinopoisk_id_by_title, get_film_data
 from api_gateway.film_service import get_recommended_films
@@ -10,6 +11,8 @@ from aiogram.fsm.state import StatesGroup, State
 import keyboards.keyboards as kb
 from handlers.mainHandlers import cancelForSearch, cancel
 from rooms.createManager import manager
+
+MATCHING_SERVICE_URL = "http://match_api:4450/push"
 
 class FilmSearchState(StatesGroup):   # для понимания контекста бота, типа он ждет сообщения с названием фильма
     waiting_for_title = State()
@@ -63,7 +66,16 @@ async def send_room_film(message: Message, state: FSMContext, room, userId):  # 
     film = room.getCurrentFilmForUser(userId)
 
     if not film:
+        room.finished_users.add(userId)
         await message.answer("Вы просмотрели все фильмы!")
+
+        if len(room.finished_users) == len(room.roomMembers):
+            if room.matched_films:
+                for user in room.roomMembers:
+                    await send_matched_films_with_buttons(user.getUserId(), room.matched_films)
+            else:
+                for user in room.roomMembers:
+                    await bot.send_message(user.getUserId(), "К сожалению, совпадений нет 😔")
         return
 
     poster_url = film["poster_url"]
@@ -94,7 +106,7 @@ async def start_recommendation(message: Message, state: FSMContext):
     room = manager.getRoomById(user.getRoomNumber())
 
     if not room.films:
-        room.setFilms(get_recommended_films(limit=10))
+        room.setFilms(get_recommended_films(limit=5))
 
     for curUser in room.roomMembers:
         userId = curUser.getUserId()
@@ -123,13 +135,30 @@ async def rate_film(message: Message, state: FSMContext):
         return
 
     film = room.films[lastIndex]
+    film_id = film["kinopoiskId"]
     film_name = film["name"]
 
     if message.text == "❤️":
-        await message.answer(f"Вы поставили лайк фильму: {film_name}")
-    elif message.text == "👎":
-        await message.answer(f"Вы поставили дизлайк фильму: {film_name}")
-    else:
+        params = {
+            "status": "film message",
+            "film_status": "like",
+            "room": room.getRoomId(),
+            "user": user.userId,
+            "film": film_id
+        }
+
+        try:
+            response = requests.post(MATCHING_SERVICE_URL, params=params)
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("status") == "Match found":
+                    matched_film_id = result.get("matched film")
+                    if matched_film_id not in room.matched_films:
+                        room.matched_films.append(matched_film_id)
+
+        except Exception as e:
+            print(f"Ошибка при обращении к Redis-сервису: {e}")
+    elif message.text != "👎":
         return
 
     await send_room_film(message, state, room, message.from_user.id)
@@ -184,6 +213,57 @@ async def leave(message: Message, state: FSMContext):
     await message.answer(f"Вы покинули комнату {room.getRoomId()}", reply_markup=kb.startMenu)
     await state.clear()
 
+async def send_film_info(user_id, film):
+    poster_url = film.get("poster_url")
+    name = film.get("name")
+    year = film.get("year")
+    genre = film.get("genre")
+    rating = film.get("rating")
+    description = film.get("description")
+    webUrl = film.get("webUrl")
+
+    text = f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}\nОписание: {description}\n\nПодробнее: {webUrl}"
+
+    if poster_url:
+        if len(text) > 1024:
+            await bot.send_photo(user_id, poster_url, f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}")
+            await bot.send_message(user_id, f"Описание: {description}\n\nПодробнее: {webUrl}")
+        else:
+            await bot.send_photo(user_id, poster_url, caption=text)
+    else:
+        await bot.send_message(user_id, text)
+
+
+async def send_matched_films_with_buttons(user_id, matched_films):
+    # формируем список с кнопками
+    text = "🥳 Фильмы, которые понравились всем участникам: 🥳\n\n"
+    buttons = []
+
+    # генерируем кнопки для каждого фильма
+    for i, film_id in enumerate(matched_films, 1):
+        film_data = get_film_data(film_id)
+        name = film_data.get("name")
+        text += f"{i}️⃣ {name}\n\n"
+        buttons.append(InlineKeyboardButton(text=str(i), callback_data=f"film_info_{film_id}"))
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[buttons[i:i + 5] for i in range(0, len(buttons), 5)])
+
+    await bot.send_message(user_id, text, reply_markup=keyboard)
+
+@dp.callback_query(F.data.startswith("film_info_"))
+async def show_film_info(callback: types.CallbackQuery):
+    film_id = callback.data.split("_")[2]
+    film_data = get_film_data(film_id)
+
+    if not film_data:
+        await callback.message.answer("Информация о фильме не найдена.")
+        return
+
+    await send_film_info(callback.from_user.id, film_data)
+
+    await callback.answer()
+
+
 def register_handlers(dp: Dispatcher):
     dp.message.register(choose_genre, F.text == "🎭 Выбрать жанр")
     dp.message.register(leave, F.text == "🚪 Уйти")
@@ -194,3 +274,5 @@ def register_handlers(dp: Dispatcher):
     dp.message.register(ask_for_title, F.text == "🔍 Найти фильм")
     dp.message.register(film_info, FilmSearchState.waiting_for_title)
     dp.message.register(rate_film, FilmRecommendationState.recommendation)
+
+    dp.callback_query.register(show_film_info, F.data.startswith("film_info_"))

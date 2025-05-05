@@ -8,6 +8,8 @@ class Room:
         self.match = list()
         self.films = [] # список фильмов для комнаты
         self.userIndex = dict() # словарь с индексами текущего фильма для каждого пользователя
+        self.matched_films = []  # список совпавших фильмов
+        self.finished_users = set()  # user_id пользователей, закончивших просмотр
 
     def addMember(self, member):
         self.roomMembers.append(member)

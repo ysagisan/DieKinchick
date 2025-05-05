@@ -2,6 +2,7 @@ from aiogram import F, Dispatcher
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
+import requests
 import keyboards.keyboards as kb
 from botSettings.createBot import dp, bot
 from rooms.createManager import manager
@@ -31,6 +32,18 @@ async def process_room_id(message: Message, state: FSMContext):
     room_id = int(message.text.strip())
     if manager.checkRoomId(room_id) == 1:
         manager.joinToRoom(room_id, message.from_user.id)
+
+        updated_users = [user.getUserId() for user in manager.getRoomById(room_id).roomMembers]
+        if len(updated_users) > 1:
+            try:
+                response = requests.post("http://match_api:4450/push", params={
+                    "status": "new room",  # Переиспользуем этот статус
+                    "room": room_id,
+                    "users": updated_users
+                })
+            except Exception as e:
+                print(f"Ошибка при обновлении пользователей комнаты: {e}")
+
         await message.answer(f"Вы успешно подключились к комнате {room_id}!\nОжидайте", reply_markup=kb.menuForConnectedUsers)
         await state.set_state(RoomStates.in_room)
         creator_id = manager.getCreatorId(room_id)
