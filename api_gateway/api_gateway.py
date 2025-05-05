@@ -1,6 +1,8 @@
 from flask import Flask, jsonify
 from minio import Minio
 import psycopg2
+import random
+from flask import request
 
 app = Flask(__name__)
 
@@ -25,7 +27,7 @@ minio_client = Minio(
 # Функция для получения информации о фильме из БД
 def get_film_info(kinopoisk_id):
     querie = """
-        SELECT name, year, genre, rating, description FROM films_information
+        SELECT name, year, genre, rating, webUrl, description FROM films_information
         WHERE kinopoiskId = %s;
     """
     cur.execute(querie, (kinopoisk_id,))
@@ -36,7 +38,8 @@ def get_film_info(kinopoisk_id):
             "year": result[1],
             "genre": result[2],
             "rating": result[3],
-            "description": result[4]
+            "webUrl": result[4],
+            "description": result[5]
         }
     return None
 
@@ -47,12 +50,50 @@ def get_film_poster(kinopoisk_id):
         object_name = f"{kinopoisk_id}"
         # Проверим, существует ли объект в MinIO
         minio_client.stat_object("films-posters", object_name)
-        # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса в внешний мир так сказатб,
+        # этот адрес получен с помощью cloudflared эта штука строит тунель от локального адреса во внешний мир так сказатб,
         # каждый раз после запуска нужно запускать cloudflared tunnel --url http://localhost:9000 и менять ссылку
-        return f"https://guinea-potatoes-fell-restaurants.trycloudflare.com/films-posters/{object_name}"
+        return f"https://which-ratios-weights-conducting.trycloudflare.com/films-posters/{object_name}"
     except Exception as e:
         print(f"Ошибка при получении постера: {e}")
         return None
+
+def build_film_list(kinopoisk_ids):
+    films = []
+    for kinopoisk_id in kinopoisk_ids:
+        film_info = get_film_info(kinopoisk_id)
+        if film_info:
+            poster_url = get_film_poster(kinopoisk_id)
+            film = {
+                "kinopoiskId": kinopoisk_id,
+                "name": film_info["name"],
+                "year": film_info["year"],
+                "genre": film_info["genre"],
+                "rating": film_info["rating"],
+                "webUrl": film_info["webUrl"],
+                "description": film_info["description"],
+                "poster_url": poster_url
+            }
+            films.append(film)
+    return films
+
+def get_random_films(limit):
+    cur.execute("SELECT kinopoiskId FROM films_information")
+    film_ids = [row[0] for row in cur.fetchall()]
+    random.shuffle(film_ids)
+    selected = film_ids[:limit]
+
+    return build_film_list(selected)
+
+def get_films_by_genre(limit, genre):
+    query = """
+        SELECT kinopoiskId FROM films_information
+        WHERE genre ILIKE %s
+    """
+    cur.execute(query, (f"%{genre}%",))
+    film_ids = [row[0] for row in cur.fetchall()]
+    random.shuffle(film_ids)
+    selected = film_ids[:limit]
+    return build_film_list(selected)
 
 @app.route('/film/<int:kinopoisk_id>', methods=['GET']) # тут обрабатываем запрос на поиск фильма по id
 def get_film_data(kinopoisk_id):
@@ -62,7 +103,6 @@ def get_film_data(kinopoisk_id):
         return jsonify({"error": "Film not found"}), 404
 
     # Получаем постер фильма из MinIO
-
     poster_url = get_film_poster(kinopoisk_id)
 
     # Собираем всю информацию и отправляем её
@@ -70,8 +110,6 @@ def get_film_data(kinopoisk_id):
     if poster_url:
         response['poster_url'] = poster_url
     return jsonify(response)
-
-from flask import request
 
 @app.route('/search', methods=['GET']) # тут запрос на поиск фильма по названию
 def search_film_by_title():
@@ -101,6 +139,16 @@ def search_film_by_title():
     except Exception as e:
         return jsonify({"error": f"Server error: {e}"}), 500
 
+@app.get("/films/recommendations")
+def get_recommendations():
+    limit = int(request.args.get("limit", 10))
+    genre = request.args.get("genre")
+
+    if genre:
+        films = get_films_by_genre(limit, genre)
+    else:
+        films = get_random_films(limit)
+    return {"films": films}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3298)

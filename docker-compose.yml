@@ -1,6 +1,11 @@
-version: '3.8'
-
 services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6380:6380"
+    restart: unless-stopped
+
   minio:
     image: quay.io/minio/minio
     container_name: minio
@@ -43,6 +48,31 @@ services:
       - postgres
       - minio
     restart: unless-stopped
+
+  tg_bot:
+    build:
+      context: .
+      dockerfile: botSettings/Dockerfile
+    container_name: telegram_bot
+    environment:
+      API_GATEWAY_URL: http://api-gateway:3298
+      TELEGRAM_TOKEN: ${TOKEN}
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+  match-api:
+    build:
+      context: .
+      dockerfile: matchFindService/Dockerfile
+    container_name: match_api
+    ports:
+      - "4450:4450"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+
 
 volumes:
   postgres_data:
