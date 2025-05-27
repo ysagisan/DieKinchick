@@ -3,9 +3,9 @@ name: Python CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ unit_tests/DXYW-41-Unit-тесты-для-Telegram-бота/Room_and_manager_tests) ]
   pull_request:
-    branches: [ master ]
+    branches: [ unit_tests/DXYW-41-Unit-тесты-для-Telegram-бота/Room_and_manager_tests) ]
 
 jobs:
   build:
