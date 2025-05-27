@@ -1,0 +1,36 @@
+# .github/workflows/ci.yml
+name: Python CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout DieKinchick
+        uses: actions/checkout@v3
+
+      - name: Установка Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Установка зависимостей
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Проверка кода flake8
+        run: |
+          pip install flake8
+          flake8 .
+
+      - name: Запуск тестов
+        run: |
+          unittest discover -s tests
