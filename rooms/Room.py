@@ -1,4 +1,3 @@
-from typing import List, Dict
 
 class Room:
     def __init__(self, roomId: int, creatorId: int):
@@ -14,6 +13,7 @@ class Room:
         self.userIndex[member.userId] = 0
 
     def deleteMember(self, user):
+        print(f"User {user.userId} leave the room")
         self.roomMembers.remove(user)
 
     def getCreatorId(self):
