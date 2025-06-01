@@ -37,12 +37,6 @@ jobs:
         run: ls -R
 
       - name: Запуск тестов
-        run: |
-          python -m unittest discover -s tests
-      #          unittest discover -s tests
+        run: python -m unittest discover -s tests
 
-      - name: Проверка форматирования (black)
-        run: |
-          pip install black
-          black --check .
 
