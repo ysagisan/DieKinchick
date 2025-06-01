@@ -2,6 +2,7 @@ import unittest
 from rooms.User import User
 from rooms.Manager import Manager
 
+
 class TestRoom(unittest.TestCase):
     def setUp(self):
         print("test set up")
@@ -89,6 +90,7 @@ class TestRoom(unittest.TestCase):
     def test_get_room_id(self):
         print("test get room id")
         self.assertEqual(self.room.getRoomId(), self.room_id)
+
 
 if __name__ == '__main__':
     unittest.main()

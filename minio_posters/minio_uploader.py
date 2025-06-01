@@ -9,6 +9,7 @@ client = Minio(
     secure=False
 )
 
+
 # Эта функция проверяет есть ли уже файл с названием object_name в bucket_name
 def object_exists(client, bucket_name: str, object_name: str) -> bool:
     try:
@@ -19,9 +20,9 @@ def object_exists(client, bucket_name: str, object_name: str) -> bool:
             return False
         raise
 
+
 # Эта функция загружает постер poster_url в бакет bucket_name
 def upload_poster_from_url(poster_url: str, object_name: str, bucket_name="films-posters"):
-
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
 
@@ -42,4 +43,3 @@ def upload_poster_from_url(poster_url: str, object_name: str, bucket_name="films
         content_type="image/jpeg"
     )
     print(f"\033[32mMINIO:\033[0m Постер <{object_name}> успешно загружен!")
-

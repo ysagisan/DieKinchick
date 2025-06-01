@@ -15,6 +15,7 @@ params = {
     "page": 1
 }
 
+
 # Эта функция возвращает json с информацией о подборке фильмов
 def get_info(page_num: int):
     params["page"] = page_num

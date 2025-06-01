@@ -7,6 +7,7 @@ from botSettings.createBot import dp, bot
 from rooms.createManager import manager
 from handlers.mainHandlers import cancel, cancelFromEnterPassword
 
+
 class RoomStates(StatesGroup):
     waiting_for_room = State()
     in_room = State()
@@ -16,7 +17,8 @@ class RoomStates(StatesGroup):
 async def createRoom(message: Message):
     roomId = manager.createRoom(message.from_user.id)
     await message.answer(f"Вот id твоей комнаты: {roomId}\nПодожди друзей", reply_markup=kb.preStartMenu)
-    manager.joinToRoom(roomId, message.from_user.id)   # добавил, потому что когда пользователь создавал комнату у него не обновлялся id комнаты, то есть он был -1
+    manager.joinToRoom(roomId,
+                       message.from_user.id)  # добавил, потому что когда пользователь создавал комнату у него не обновлялся id комнаты, то есть он был -1
 
 
 @dp.message(F.text == "👥 Присоединиться")
@@ -31,7 +33,8 @@ async def process_room_id(message: Message, state: FSMContext):
     room_id = int(message.text.strip())
     if manager.checkRoomId(room_id) == 1:
         manager.joinToRoom(room_id, message.from_user.id)
-        await message.answer(f"Вы успешно подключились к комнате {room_id}!\nОжидайте", reply_markup=kb.menuForConnectedUsers)
+        await message.answer(f"Вы успешно подключились к комнате {room_id}!\nОжидайте",
+                             reply_markup=kb.menuForConnectedUsers)
         await state.set_state(RoomStates.in_room)
         creator_id = manager.getCreatorId(room_id)
 
@@ -41,6 +44,7 @@ async def process_room_id(message: Message, state: FSMContext):
         await message.answer("Комната с таким ID не найдена. Попробуйте еще раз или создайте новую комнату.",
                              reply_markup=kb.roomMenu)
         await state.clear()
+
 
 @dp.message(F.text == "🚪 Уйти")
 async def leave(message: Message, state: FSMContext):
@@ -57,6 +61,7 @@ async def leave(message: Message, state: FSMContext):
 
     await message.answer(f"Вы покинули комнату {room.getRoomId()}", reply_markup=kb.startMenu)
     await state.clear()
+
 
 def register_handlers(dp: Dispatcher):
     dp.message.register(createRoom, F.text == "🆕 Создать комнату")

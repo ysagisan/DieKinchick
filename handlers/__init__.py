@@ -1,8 +1,5 @@
 from handlers import mainHandlers
-from aiogram.filters import CommandStart
 from handlers import mainHandlers as hd
-from aiogram import F
-
 
 import importlib
 from pathlib import Path

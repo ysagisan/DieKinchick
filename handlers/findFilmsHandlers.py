@@ -11,27 +11,33 @@ import keyboards.keyboards as kb
 from handlers.mainHandlers import cancelForSearch, cancel
 from rooms.createManager import manager
 
-class FilmSearchState(StatesGroup):   # для понимания контекста бота, типа он ждет сообщения с названием фильма
+
+class FilmSearchState(StatesGroup):  # для понимания контекста бота, типа он ждет сообщения с названием фильма
     waiting_for_title = State()
 
-class FilmRecommendationState(StatesGroup): # для состояния, когда пользователь оценивает фильмы
+
+class FilmRecommendationState(StatesGroup):  # для состояния, когда пользователь оценивает фильмы
     recommendation = State()
 
-class FilmGenreChoiceState(StatesGroup): # для состояния выбора жанра
+
+class FilmGenreChoiceState(StatesGroup):  # для состояния выбора жанра
     choosing_genre = State()
 
-@dp.message(F.text == "🔍 Найти фильм")       # для поиска фильма
+
+@dp.message(F.text == "🔍 Найти фильм")  # для поиска фильма
 async def ask_for_title(message: Message, state: FSMContext):
     await message.answer("Введи название фильма", reply_markup=kb.searchMenu)
     await state.set_state(FilmSearchState.waiting_for_title)
+
 
 @dp.message(FilmSearchState.waiting_for_title)  # здесь и происходит поиск фильма
 async def film_info(message: Message, state: FSMContext):
     title = message.text.strip()
 
-    kinopoisk_id = get_kinopoisk_id_by_title(title) # сначала получаем id фильма через название, которое ввел пользователь
+    kinopoisk_id = get_kinopoisk_id_by_title(
+        title)  # сначала получаем id фильма через название, которое ввел пользователь
     if kinopoisk_id:
-        film_data = get_film_data(kinopoisk_id) # потом по этому id находим сам фильм
+        film_data = get_film_data(kinopoisk_id)  # потом по этому id находим сам фильм
 
         if film_data:
             name = film_data.get("name")
@@ -52,13 +58,16 @@ async def film_info(message: Message, state: FSMContext):
                 else:
                     await message.answer_photo(poster_url, caption=text, reply_markup=kb.searchMenu)
             else:
-                await message.answer(f"Постер для фильма {name} не найден.\n\nОписание:\n{description}\n\nПодробнее: {webUrl}")
+                await message.answer(
+                    f"Постер для фильма {name} не найден.\n\nОписание:\n{description}\n\nПодробнее: {webUrl}")
         else:
             await message.answer("Фильм не найден.")
     else:
         await message.answer("Фильм не найден в базе.")
 
-async def send_room_film(message: Message, state: FSMContext, room, userId):  # здесь отправляем фильм в конкретный чат конкретному пользователю
+
+async def send_room_film(message: Message, state: FSMContext, room,
+                         userId):  # здесь отправляем фильм в конкретный чат конкретному пользователю
 
     film = room.getCurrentFilmForUser(userId)
 
@@ -79,7 +88,8 @@ async def send_room_film(message: Message, state: FSMContext, room, userId):  # 
     if poster_url:
         if len(text) > 1024:
             await bot.send_photo(userId, poster_url, f"Название: {name}\nГод: {year}\nЖанр: {genre}\nРейтинг: {rating}")
-            await bot.send_message(userId, f"Описание: {description}\n\nПодробнее: {webUrl}", reply_markup=kb.likeDislikeMenu)
+            await bot.send_message(userId, f"Описание: {description}\n\nПодробнее: {webUrl}",
+                                   reply_markup=kb.likeDislikeMenu)
         else:
             await bot.send_photo(userId, poster_url, caption=text, reply_markup=kb.likeDislikeMenu)
     else:
@@ -88,7 +98,8 @@ async def send_room_film(message: Message, state: FSMContext, room, userId):  # 
     room.nextFilmForUser(userId)
 
 
-@dp.message(F.text == "🎲 Случайный подбор")   # здесь задается список фильмов и для каждого пользователя устанавливается контекст рекомендации
+@dp.message(
+    F.text == "🎲 Случайный подбор")  # здесь задается список фильмов и для каждого пользователя устанавливается контекст рекомендации
 async def start_recommendation(message: Message, state: FSMContext):
     user = manager.getUserById(message.from_user.id)
     room = manager.getRoomById(user.getRoomNumber())
@@ -110,7 +121,6 @@ async def start_recommendation(message: Message, state: FSMContext):
         )
         await individual_state.set_state(FilmRecommendationState.recommendation)
         await send_room_film(message, individual_state, room, userId)
-
 
 
 @dp.message(FilmRecommendationState.recommendation)  # здесь пользователи оценивают фильм и отправляется следующий
@@ -140,6 +150,7 @@ async def choose_genre(message: Message, state: FSMContext):
     await message.answer("Выбери жанр фильма:", reply_markup=kb.genreMenu)
     await state.set_state(FilmGenreChoiceState.choosing_genre)
 
+
 @dp.message(FilmGenreChoiceState.choosing_genre)
 async def start_recommendation_with_genre(message: Message, state: FSMContext):
     genre = message.text.strip()
@@ -168,6 +179,7 @@ async def start_recommendation_with_genre(message: Message, state: FSMContext):
         await individual_state.set_state(FilmRecommendationState.recommendation)
         await send_room_film(message, individual_state, room, userId)
 
+
 @dp.message(F.text == "🚪 Уйти")
 async def leave(message: Message, state: FSMContext):
     curUser = manager.getUserById(message.from_user.id)
@@ -183,6 +195,7 @@ async def leave(message: Message, state: FSMContext):
 
     await message.answer(f"Вы покинули комнату {room.getRoomId()}", reply_markup=kb.startMenu)
     await state.clear()
+
 
 def register_handlers(dp: Dispatcher):
     dp.message.register(choose_genre, F.text == "🎭 Выбрать жанр")

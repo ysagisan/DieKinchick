@@ -1,8 +1,9 @@
 import requests
 
 API_URL = "http://film_api:3298/film"  # адрес для запроса /films/<kinopoiskId>
-SEARCH_URL = "http://film_api:3298/search" # адрес для запроса /search?title=<Название фильма>
+SEARCH_URL = "http://film_api:3298/search"  # адрес для запроса /search?title=<Название фильма>
 RECOMMEND_URL = "http://film_api:3298/films/recommendations"
+
 
 def get_film_data(kinopoisk_id):
     try:
@@ -15,6 +16,7 @@ def get_film_data(kinopoisk_id):
         print(f"Ошибка при запросе данных с API Gateway: {e}")
         return None
 
+
 def get_kinopoisk_id_by_title(title):
     try:
         response = requests.get(f"{SEARCH_URL}", params={"title": title})
@@ -25,6 +27,7 @@ def get_kinopoisk_id_by_title(title):
         print(f"Ошибка при поиске ID по названию: {e}")
         return None
 
+
 def get_recommended_films(limit=10):
     try:
         response = requests.get(RECOMMEND_URL, params={"limit": limit})
@@ -34,6 +37,7 @@ def get_recommended_films(limit=10):
     except Exception as e:
         print(f"Ошибка при получении рекомендованных фильмов: {e}")
         return []
+
 
 def get_recommended_film_with_genre(limit=10, genre=None):
     try:

@@ -12,6 +12,5 @@ class User:
     def getRoomNumber(self):
         return self.roomNumber
 
-
     def getUserId(self):
         return self.userId

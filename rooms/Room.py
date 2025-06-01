@@ -1,12 +1,11 @@
-
 class Room:
     def __init__(self, roomId: int, creatorId: int):
         self.roomId = roomId
         self.creatorId = creatorId
         self.roomMembers = []  # удалил creatorId, потому что здесь список объектов, а не список айдишников
         self.match = list()
-        self.films = [] # список фильмов для комнаты
-        self.userIndex = dict() # словарь с индексами текущего фильма для каждого пользователя
+        self.films = []  # список фильмов для комнаты
+        self.userIndex = dict()  # словарь с индексами текущего фильма для каждого пользователя
 
     def addMember(self, member):
         self.roomMembers.append(member)

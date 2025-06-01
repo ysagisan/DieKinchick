@@ -13,14 +13,17 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
+
 def read_sql_from_file(filename):
     base_path = os.path.dirname(__file__)  # путь к папке, где лежит postgres_db.py
     file_path = os.path.join(base_path, filename)
     with open(file_path, 'r') as file:
         return file.read()
 
+
 create_table_query = read_sql_from_file("queries.sql")
 cur.execute(create_table_query)
+
 
 def film_exists(kinopoiskId):
     check_table = """
@@ -28,6 +31,7 @@ def film_exists(kinopoiskId):
     """
     cur.execute(check_table, (kinopoiskId,))
     return cur.fetchone() is not None
+
 
 def insert_film(kinopoiskId, name, year, genre, rating, webUrl, description):
     if film_exists(kinopoiskId):
@@ -47,8 +51,9 @@ def insert_film(kinopoiskId, name, year, genre, rating, webUrl, description):
         print(f"\033[31mPOSTGRES:\033[0m Ошибка при вставке фмильма: {e}")
         conn.rollback()
 
+
 def parse_and_add_films(page_num):
-    for page in range(1, page_num+1):
+    for page in range(1, page_num + 1):
         films_data = get_info(page)
         for film in films_data["items"]:
             kinopoiskId = film.get("kinopoiskId")
@@ -65,6 +70,7 @@ def parse_and_add_films(page_num):
             poster_url = film.get("posterUrlPreview") or film.get("posterUrl")
             if poster_url:
                 upload_poster_from_url(poster_url, f"{kinopoiskId}")
+
 
 if __name__ == "__main__":
     parse_and_add_films(page_num=2)

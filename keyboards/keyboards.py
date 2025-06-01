@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, KeyboardButton, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 startMenu = ReplyKeyboardMarkup(
     keyboard=[
@@ -12,8 +12,8 @@ startMenu = ReplyKeyboardMarkup(
 roomMenu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="🆕 Создать комнату"),
-         KeyboardButton(text="👥 Присоединиться")], # добавил кнопочки
-         [KeyboardButton(text="🔍 Найти фильм")]
+         KeyboardButton(text="👥 Присоединиться")],  # добавил кнопочки
+        [KeyboardButton(text="🔍 Найти фильм")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -34,7 +34,7 @@ likeDislikeMenu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="❤️"),
          KeyboardButton(text="👎")],
-         [KeyboardButton(text="🚪 Уйти")]
+        [KeyboardButton(text="🚪 Уйти")]
     ],
     resize_keyboard=True,
     one_time_keyboard=False,
@@ -50,7 +50,7 @@ cancelMenu = ReplyKeyboardMarkup(
     input_field_placeholder="Ну что погнали нафиг"
 )
 
-searchMenu = ReplyKeyboardMarkup(    # добавил меню с поиском
+searchMenu = ReplyKeyboardMarkup(  # добавил меню с поиском
     keyboard=[
         [KeyboardButton(text="🚫 Закрыть поиск")]
     ],

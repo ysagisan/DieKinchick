@@ -11,7 +11,7 @@ class Manager:
     def __init__(self):
         self.idsRange = list(range(100000, 1000001))
         self.nonAvalibleIds = set()
-        self.activeRooms = list() #Room
+        self.activeRooms = list()  # Room
         self.userList = list()
 
     def getUserById(self, userId):
@@ -62,7 +62,6 @@ class Manager:
     def deleteRoom(self, room: Room):
         self.nonAvalibleIds.remove(room.roomId)
         self.activeRooms.remove(room)
-
 
     def joinToRoom(self, roomId, userId):
         newUser = self.getUserById(userId)

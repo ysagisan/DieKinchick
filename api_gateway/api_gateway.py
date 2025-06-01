@@ -24,6 +24,7 @@ minio_client = Minio(
     secure=False
 )
 
+
 # Функция для получения информации о фильме из БД
 def get_film_info(kinopoisk_id):
     querie = """
@@ -43,6 +44,7 @@ def get_film_info(kinopoisk_id):
         }
     return None
 
+
 # Функция для получения постера фильма из MinIO
 def get_film_poster(kinopoisk_id):
     try:
@@ -56,6 +58,7 @@ def get_film_poster(kinopoisk_id):
     except Exception as e:
         print(f"Ошибка при получении постера: {e}")
         return None
+
 
 def build_film_list(kinopoisk_ids):
     films = []
@@ -76,6 +79,7 @@ def build_film_list(kinopoisk_ids):
             films.append(film)
     return films
 
+
 def get_random_films(limit):
     cur.execute("SELECT kinopoiskId FROM films_information")
     film_ids = [row[0] for row in cur.fetchall()]
@@ -83,6 +87,7 @@ def get_random_films(limit):
     selected = film_ids[:limit]
 
     return build_film_list(selected)
+
 
 def get_films_by_genre(limit, genre):
     query = """
@@ -95,7 +100,8 @@ def get_films_by_genre(limit, genre):
     selected = film_ids[:limit]
     return build_film_list(selected)
 
-@app.route('/film/<int:kinopoisk_id>', methods=['GET']) # тут обрабатываем запрос на поиск фильма по id
+
+@app.route('/film/<int:kinopoisk_id>', methods=['GET'])  # тут обрабатываем запрос на поиск фильма по id
 def get_film_data(kinopoisk_id):
     # Получаем информацию о фильме из базы данных
     film_info = get_film_info(kinopoisk_id)
@@ -111,7 +117,8 @@ def get_film_data(kinopoisk_id):
         response['poster_url'] = poster_url
     return jsonify(response)
 
-@app.route('/search', methods=['GET']) # тут запрос на поиск фильма по названию
+
+@app.route('/search', methods=['GET'])  # тут запрос на поиск фильма по названию
 def search_film_by_title():
     title = request.args.get('title')
     print(title)
@@ -139,6 +146,7 @@ def search_film_by_title():
     except Exception as e:
         return jsonify({"error": f"Server error: {e}"}), 500
 
+
 @app.get("/films/recommendations")
 def get_recommendations():
     limit = int(request.args.get("limit", 10))
@@ -149,6 +157,7 @@ def get_recommendations():
     else:
         films = get_random_films(limit)
     return {"films": films}
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3298)

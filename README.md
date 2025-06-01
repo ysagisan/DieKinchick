@@ -14,3 +14,6 @@
 
 **Завершение сеанса**
 В ключ `status` пишем `end of session`, в ключ `room` пишем название комнаты
+
+
+[![CI](https://github.com/ysagisan/DieKinchick/actions/workflows/ci.yml/badge.svg)](https://github.com/ysagisan/DieKinchick/actions/workflows/ci.yml)
